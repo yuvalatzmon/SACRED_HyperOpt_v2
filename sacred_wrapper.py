@@ -27,7 +27,7 @@ class mnist_experiment(hyperopt_sacred_wrapper):
 
 
     def sacred_ex_name(self):
-        return 'MNIST_CNN'
+        return 'MNIST_' + self.cfg['model_name']
 
 # noinspection PyUnusedLocal
 def ex_config():
@@ -66,7 +66,7 @@ def main(ex, _run, f_log_metrics):
 
 def log_metrics(_run, logs):
     """
-    Implements the metrics logging API
+    Implements the metrics logging API with SACRED
     """
     _run.log_scalar("loss", float(logs.get('loss')))
     _run.log_scalar("acc", float(logs.get('acc')))

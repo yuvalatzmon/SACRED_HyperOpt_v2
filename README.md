@@ -6,16 +6,17 @@ Below you can also find full installation and usage instructions.
 
 # Features
 * Random order grid search, which is easy to config and manage, combining HyperOpt and [SACRED](https://github.com/IDSIA/sacred). 
+* Grid-search ranges support logarithmic, linear and categorical ranges.  
 * Very easy to scale across machines and clusters. 
 * Avoids running the same experiment twice.
 * Experiments are logged on MongoDB with [SACRED](https://github.com/IDSIA/sacred) experimental framework.
 * Example notebook for accessing results saved on MongoDB using PANDAS DataFrame.
-* A wrapper to adapt argparse based commandline training script.
+* A wrapper to adapt argparse based commandline training script, supporting execution from either grid-search script or the commandline
 
 # Project files
 `mnist_keras.py` is a script to train mnist from commandline.
 
-`sacred_wrapper.py` is a SACRED wrapper for mnist_keras.
+`sacred_wrapper.py` is a SACRED-HyperOpt wrapper for mnist_keras.
 
 `hyperopt_search.py` is a distributed scheduler for hyper-params optimization.
 
@@ -102,7 +103,7 @@ Check that mongo server is running by `cat $MONGO_DIR/log/mongo.log` and verifyi
     
 Monitor results with [sacred board](https://github.com/chovanecm/sacredboard) (optional) 
 
-	sacredboard -m sacred_mnist
+	sacredboard -m MNISTdebug
 
 ### 3. Execute hyper-params random order grid-search on a distributed system (a cluster of machines)
 
@@ -123,7 +124,7 @@ Login to client #1, run the commands above, and execute the hyper-params schedul
 	
     python hyperopt_search.py 
 
-For every other client machines (a "worker" machine), login and execute the worker script:
+For every other client machines (a "worker" machine), execute the worker script:
 
 	export GPU_ID=<gpu_id> # select gpu id
     PYTHONPATH="./" CUDA_VISIBLE_DEVICES=$GPU_ID hyperopt-mongo-worker --mongo=localhost:27017/hyperopt_mnist --poll-interval=1 --workdir=`mktemp -u -p /tmp/hyperopt/`

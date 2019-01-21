@@ -299,22 +299,10 @@ def _value2str(val):
 
 
 class hyperopt_sacred_wrapper():
-
-    def sacred_db_name(self):
-        """ This method should be override by child class
-        returns the Mongo DB name for this set of experiments.
-        """
-        return 'SACRED_DB'
-
-    def sacred_ex_name(self):
-        """ This method should be override by child class
-        returns the current experiment name.
-        """
-        return 'Experiment'
-
-
     def __init__(self, f_main, f_config, f_capture, cfg,
                  mongo_url='127.0.0.1:27017', disable_logging=False):
+
+        self.cfg = cfg
 
         curr_db_name = self.sacred_db_name()
         ex_name = self.sacred_ex_name()
@@ -337,6 +325,18 @@ class hyperopt_sacred_wrapper():
             return main_wrapper(f_main, ex, f_ex_capture, self.sacred_db_name(), _run)
 
         self.ex = ex
+
+    def sacred_db_name(self):
+        """ This method should be override by child class
+        returns the Mongo DB name for this set of experiments.
+        """
+        return 'SACRED_DB'
+
+    def sacred_ex_name(self):
+        """ This method should be override by child class
+        returns the current experiment name.
+        """
+        return 'Experiment'
 
 
 def main_wrapper(f_main, ex, f_ex_capture, curr_db_name, _run):
