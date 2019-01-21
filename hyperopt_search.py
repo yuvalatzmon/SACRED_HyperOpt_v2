@@ -6,7 +6,7 @@ from hyperopt.mongoexp import MongoTrials
 from pymongo import MongoClient
 
 from sacred_wrapper import hyperopt_objective
-from hyperopt_utils import hyperopt_grid, to_exp_space
+from hopt_sacred import hyperopt_grid, to_exp_space
 
 import warnings
 # see https://stackoverflow.com/a/40846742

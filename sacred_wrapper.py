@@ -64,12 +64,12 @@ def setup_SACRED_experiments_framework(mongo_url='127.0.0.1:27017'):
         client = MongoClient('localhost', 27017)
         print('db = ', curr_db_name)
         db = client[curr_db_name]
-        duplicate_ex = hyperopt_utils.check_for_completed_experiment(db, _run.config)
+        duplicate_ex = hopt_sacred.check_for_completed_experiment(db, _run.config)
         if duplicate_ex is not None:
             _run.info['model_metrics'] = duplicate_ex['info']['model_metrics']
             _run.info['duplicate_id'] = duplicate_ex['_id']
             print('Aborting due to a duplicate experiment')
-            raise hyperopt_utils.DuplicateExperiment(duplicate_ex)
+            raise hopt_sacred.DuplicateExperiment(duplicate_ex)
         else:
 
             # call main script
@@ -93,7 +93,7 @@ def setup_SACRED_experiments_framework(mongo_url='127.0.0.1:27017'):
 ##### HyperOpt support #####################
 from hyperopt import STATUS_OK
 # noinspection PyUnresolvedReferences
-import hyperopt_utils
+import hopt_sacred
 def hyperopt_objective(params):
     config = {}
 
@@ -113,7 +113,7 @@ def hyperopt_objective(params):
     try:
         run = ex.run(config_updates=config, options={'--name': ex_name})
         ex_res = vars(run)
-    except hyperopt_utils.DuplicateExperiment as e:
+    except hopt_sacred.DuplicateExperiment as e:
         ex_res = e.ex
 
     err_rate = ex_res['result']
