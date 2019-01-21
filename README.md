@@ -4,15 +4,22 @@ and [HyperOpt](https://github.com/hyperopt/hyperopt) (Distributed Asynchronous H
 
 Below you can also find full installation and usage instructions.
 
+# Features
+* Random order grid search, which is easy to config and manage, combining HyperOpt and [SACRED](https://github.com/IDSIA/sacred). 
+* Very easy to scale across machines and clusters. 
+* Avoids running the same experiment twice.
+* Experiments are logged on MongoDB with [SACRED](https://github.com/IDSIA/sacred) experimental framework.
+* Example notebook for accessing results saved on MongoDB using PANDAS DataFrame.
+* A wrapper to adapt argparse based commandline training script.
 
 # Project files
-`mnist_keras.py` is a script to train mnist with Keras.
+`mnist_keras.py` is a script to train mnist from commandline.
 
 `sacred_wrapper.py` is a SACRED wrapper for mnist_keras.
 
 `hyperopt_search.py` is a distributed scheduler for hyper-params optimization.
 
-`hyperopt_grid.py` is a grid-search extension for HyperOpt
+`hopt_sacred.py` contains core classes and functions for this project 
 
 `mongo_queries.ipynb` is a usage example for listing results saved by MongoDB, but 
 using PANDAS DataFrame API. It also demonstrates manipulating (saving, loading, 
@@ -69,12 +76,6 @@ Execute the commands below and also add them to your `~/.bashrc` file
     done  
     }    
 
-### Install RoboMongo GUI for MongoDB (optional)
-
-	wget https://download.robomongo.org/1.2.1/linux/robo3t-1.2.1-linux-x86_64-3e50a65.tar.gz
-    tar xvf robo3t-1.2.1-linux-x86_64-3e50a65.tar.gz
-    rm robo3t-1.2.1-linux-x86_64-3e50a65.tar.gz
- 
 # Running Experiments
 
 ### 1. Start MongoDB server
@@ -103,7 +104,7 @@ Monitor results with [sacred board](https://github.com/chovanecm/sacredboard) (o
 
 	sacredboard -m sacred_mnist
 
-### 3. Execute hyper-params search on a distributed system (a cluster of machines)
+### 3. Execute hyper-params random order grid-search on a distributed system (a cluster of machines)
 
 For every client machine, do the following:
 
@@ -124,9 +125,8 @@ Login to client #1, run the commands above, and execute the hyper-params schedul
 
 For every other client machines (a "worker" machine), login and execute the worker script:
 
-	export GPU_ID=<gpu_id> # select gpu id for multi gpu machine
-	PYTHONPATH="./" CUDA_VISIBLE_DEVICES=$GPU_ID hyperopt-mongo-worker --mongo=localhost:27017/hyperopt --poll-interval=1 --workdir=-workdir=`mktemp -u -p /tmp/hyperopt/`
-
+	export GPU_ID=<gpu_id> # select gpu id
+    PYTHONPATH="./" CUDA_VISIBLE_DEVICES=$GPU_ID hyperopt-mongo-worker --mongo=localhost:27017/hyperopt_mnist --poll-interval=1 --workdir=`mktemp -u -p /tmp/hyperopt/`
 
 # References
 1. https://www.hhllcks.de/blog/2018/5/4/version-your-machine-learning-models-with-sacred
@@ -136,3 +136,7 @@ For every other client machines (a "worker" machine), login and execute the work
 3. https://docs.mongodb.com/manual/tutorial/install-mongodb-on-red-hat/
 
 4. https://stackoverflow.com/a/43165464/2476373 
+
+5. https://github.com/IDSIA/sacred/issues/350
+
+6. https://github.com/IDSIA/sacred/issues/351

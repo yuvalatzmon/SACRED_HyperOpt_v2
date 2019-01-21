@@ -11,7 +11,7 @@ from tensorflow.keras.layers import Conv2D, MaxPooling2D
 from tensorflow.keras import backend as K
 
 import warnings
-# see https://stackoverflow.com/a/40846742
+# about filterwarnings, see https://stackoverflow.com/a/40846742
 warnings.filterwarnings("ignore", message="numpy.dtype size changed")
 
 
@@ -27,6 +27,8 @@ def get_commandline_args():
     parser.add_argument("--epochs", type=int, default=10)
     parser.add_argument("--batch_size", type=int, default=32)
 
+    parser.add_argument("--model_name", type=str, default='CNN')
+
     parser.add_argument("--disable_logging", type=int, default=0)
     parser.add_argument("--verbose", type=int, default=1)
     parser.add_argument("--gpu_memory_fraction", type=float, default=-1,
@@ -34,6 +36,8 @@ def get_commandline_args():
                              'or setting -1 for dynamic growth (allow_growth=True).')
 
     args, unknown_args = parser.parse_known_args()
+
+    assert(args.model_name == 'CNN')
     return args, unknown_args
 
 

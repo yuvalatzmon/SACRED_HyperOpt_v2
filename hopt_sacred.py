@@ -1,4 +1,5 @@
 import warnings
+
 import numpy as np
 import json
 import collections
@@ -316,7 +317,7 @@ class hyperopt_sacred_wrapper():
                  mongo_url='127.0.0.1:27017', disable_logging=False):
 
         curr_db_name = self.sacred_db_name()
-        ex_name = self.sacred_ex_name(cfg)
+        ex_name = self.sacred_ex_name()
         ex = Experiment(ex_name)
         ex.captured_out_filter = apply_backspaces_and_linefeeds
 
@@ -356,3 +357,6 @@ def main_wrapper(f_main, ex, f_ex_capture, curr_db_name, _run):
         raise DuplicateExperiment(duplicate_ex)
     else:
         return f_main(ex, _run, f_ex_capture)
+
+
+

@@ -41,6 +41,7 @@ def ex_config():
     fc_dim = 128
     epochs = 20
     batch_size = 32
+    model_name = 'CNN'
 
 # implementing the "f_main" API
 def main(ex, _run, f_log_metrics):
@@ -79,16 +80,19 @@ def log_metrics(_run, logs):
 from hyperopt import STATUS_OK
 # noinspection PyUnresolvedReferences
 import hopt_sacred
-def hyperopt_objective(params):
-    config = {}
+def hyperopt_objective(config, arguments):
 
-    if type(params) == dict:
-        params = params.items()
+    # get the integer arguments
+    common_args_ints = [k for k, v in vars(common_args).items() if isinstance(v, int)]
 
-    for (key, value) in params:
-        if key in ['fc_dim']:
+    # cast to int relevant params
+    for (key, value) in config.items():
+        if key in common_args_ints:
             value = int(value)
         config[key] = value
+
+    # Override argparse arguments with search arguments
+    vars(common_args).update(arguments)
 
     experiment = mnist_experiment(f_main=main, f_config=ex_config,
                                                f_capture=log_metrics,
@@ -102,8 +106,13 @@ def hyperopt_objective(params):
     except hopt_sacred.DuplicateExperiment as e:
         ex_res = e.ex
 
+    # Hyperopt API requires a metric to minimize named as 'loss'
     err_rate = ex_res['result']
     metrics = {'loss': 1 - err_rate, 'status': STATUS_OK}
+
+    # add '*' prefix to indicate measured model metrics
+    for k, v in ex_res['info']['model_metrics'].items():
+        metrics['*' + k] = v
 
     return metrics
 
