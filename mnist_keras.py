@@ -18,6 +18,8 @@ warnings.filterwarnings("ignore", message="numpy.dtype size changed")
 def get_commandline_args():
     parser = argparse.ArgumentParser()
 
+    parser.add_argument("--debug", type=int, default=1)
+
     parser.add_argument("--seed", type=int, default=0)
     parser.add_argument("--lr", type=float, default=1e-3)
     parser.add_argument("--dropout_rate", type=float, default=0.5)
