@@ -33,17 +33,15 @@ class hyperopt_sacred_wrapper():
         return 'Experiment'
 
 
-    def __init__(self, f_main, f_config, f_capture, common_args,
-                 mongo_url='127.0.0.1:27017'):
-        # global ex, curr_db_name
-        # global config, sacred_main, SACRED_log_metrics, common_args
+    def __init__(self, f_main, f_config, f_capture, cfg,
+                 mongo_url='127.0.0.1:27017', disable_logging=False):
 
         curr_db_name = self.sacred_db_name()
-        ex_name = self.sacred_ex_name(vars(common_args))
+        ex_name = self.sacred_ex_name(cfg)
         ex = Experiment(ex_name)
         ex.captured_out_filter = apply_backspaces_and_linefeeds
 
-        if common_args.disable_logging == False:
+        if disable_logging == False:
             print(f'Connecting to MongoDB at {mongo_url}:{curr_db_name}')
             ex.observers.append(MongoObserver.create(url=mongo_url, db_name=curr_db_name))
 
@@ -53,38 +51,21 @@ class hyperopt_sacred_wrapper():
         # init the experiment logging (capture) method
         f_ex_capture = ex.capture(f_capture)
 
-        # self.ex_main = ex.main(lambda f_ex_capture: f_main(f_ex_capture))
-
         # init the experiment main
         @ex.main
         def ex_main(_run):
-            return f_main(ex, f_ex_capture, self.sacred_db_name(), _run)
+            return main_wrapper(f_main, ex, f_ex_capture, self.sacred_db_name(), _run)
 
         self.ex = ex
 
 
-        # # noinspection PyUnusedLocal
-        # @ex.config
-        # def config():
-        #     # Set SACRED configuration and the default values (it will override argparse
-        #     # defaults). Note that we take only the hyper-params. Other arguments like
-        #     # --verbose, or --gpu_memory_fraction are irrelevant for the model.
-        #     seed = 0
-        #     lr = 1e-3
-        #     dropout_rate = 0.5
-        #     fc_dim = 128
-        #     epochs = 20
-        #     batch_size = 32
-        #
-# @ex.main
 def main_wrapper(f_main, ex, f_ex_capture, curr_db_name, _run):
-    cfg = _run.config
-    print(cfg)
-
-    # Override argparse arguments with sacred arguments
-    command_line_args = mnist_keras.args # argparse command line arguments
-    vars(command_line_args).update(cfg)
-
+    """
+    f_main updates the main experiment function arguments, calls it and save the
+    experiment results and artifacts.
+    f_main should implement the following API:
+        f_main(ex, _run, f_log_metrics)
+    """
     client = MongoClient('localhost', 27017)
     print('db = ', curr_db_name)
     db = client[curr_db_name]
@@ -95,17 +76,44 @@ def main_wrapper(f_main, ex, f_ex_capture, curr_db_name, _run):
         print('Aborting due to a duplicate experiment')
         raise hopt_sacred.DuplicateExperiment(duplicate_ex)
     else:
+        return f_main(ex, _run, f_ex_capture)
 
-        # call main script
-        val_acc, test_acc = mnist_keras.main(f_log_metrics=f_ex_capture)
-        _run.info['model_metrics'] = dict(val_acc=val_acc, test_acc=test_acc)
 
-        ex.add_artifact('mnist_model.h5')
+class mnist_experiment(hyperopt_sacred_wrapper):
+    def __init__(self, f_main, f_config, f_capture, cfg,
+                 mongo_url='127.0.0.1:27017', disable_logging=False):
+
+        self.is_debug = cfg['debug']
+        super(mnist_experiment, self).__init__(f_main, f_config, f_capture, cfg,
+                 mongo_url, disable_logging)
+
+    def sacred_db_name(self):
+        str_debug = 'debug' if self.is_debug == 1 else ''
+        return 'MNIST' + str_debug
+
+
+    def sacred_ex_name(self, cfg):
+        return 'MNIST_CNN'
+
+def main(ex, _run, f_log_metrics):
+    """ Updates the main experiment function arguments, calls it and save the
+        experiment results and artifacts.
+    """
+
+    # Override argparse arguments with sacred arguments
+    command_line_args = mnist_keras.args  # argparse command line arguments
+    vars(command_line_args).update(_run.config)
+
+    # call main script
+    val_acc, test_acc = mnist_keras.main(f_log_metrics=f_log_metrics)
+
+    # save the result metrics to db
+    _run.info['model_metrics'] = dict(val_acc=val_acc, test_acc=test_acc)
+    # save an artifact (CNN model) to db
+    ex.add_artifact('mnist_model.h5')
 
     return val_acc
 
-#
-# def main(argparse_args, f_ex_capture)
 
 # def sacred_db_name(is_debug):
 #     str_debug = 'debug' if is_debug == 1 else ''
@@ -185,10 +193,10 @@ def hyperopt_objective(params):
             value = int(value)
         config[key] = value
 
-    mnist_experiment = hyperopt_sacred_wrapper(f_main=main_wrapper, f_config=ex_config,
-                                               f_capture=log_metrics, common_args=common_args)
-    ex_name = mnist_experiment.sacred_ex_name(dict(vars(common_args), **config))
-    ex = mnist_experiment.ex
+    experiment = mnist_experiment(f_main=main, f_config=ex_config,
+                                               f_capture=log_metrics,
+                                               cfg=vars(common_args))
+    ex_name = experiment.sacred_ex_name(dict(vars(common_args), **config))
     # db_name = sacred_db_name(config.get('debug', 0))
     # print('db_name=', db_name)
     #
@@ -196,7 +204,7 @@ def hyperopt_objective(params):
     #                                    f_capture=log_metrics)
     # ex_name = sacred_ex_name(dict(vars(common_args), **config))
     try:
-        run = ex.run(config_updates=config, options={'--name': ex_name})
+        run = experiment.ex.run(config_updates=config, options={'--name': ex_name})
         ex_res = vars(run)
     except hopt_sacred.DuplicateExperiment as e:
         ex_res = e.ex
@@ -216,5 +224,6 @@ if __name__ == '__main__':
     # argparse library, and they interfere with the SACRED command line parser
     sacred_argv = [arg for arg in argv if not arg.startswith('--')]
 
-    setup_SACRED_experiments_framework(f_main=main_wrapper, f_config=config, f_capture=log_metrics)
+    setup_SACRED_experiments_framework(f_main=main, f_config=ex_config,
+                                       f_capture=log_metrics)
     ex.run_commandline(sacred_argv)
