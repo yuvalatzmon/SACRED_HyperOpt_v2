@@ -7,7 +7,10 @@ import re
 from hyperopt import pyll, hp
 from hyperopt.base import miscs_update_idxs_vals
 from hyperopt.pyll import scope
-
+from pymongo import MongoClient
+from sacred import Experiment
+from sacred.observers import MongoObserver
+from sacred.utils import apply_backspaces_and_linefeeds
 
 
 class objective_wrapper(object):
@@ -294,3 +297,62 @@ def _value2str(val):
     return val
 
 
+class hyperopt_sacred_wrapper():
+
+    def sacred_db_name(self):
+        """ This method should be override by child class
+        returns the Mongo DB name for this set of experiments.
+        """
+        return 'SACRED_DB'
+
+    def sacred_ex_name(self):
+        """ This method should be override by child class
+        returns the current experiment name.
+        """
+        return 'Experiment'
+
+
+    def __init__(self, f_main, f_config, f_capture, cfg,
+                 mongo_url='127.0.0.1:27017', disable_logging=False):
+
+        curr_db_name = self.sacred_db_name()
+        ex_name = self.sacred_ex_name(cfg)
+        ex = Experiment(ex_name)
+        ex.captured_out_filter = apply_backspaces_and_linefeeds
+
+        if disable_logging == False:
+            print(f'Connecting to MongoDB at {mongo_url}:{curr_db_name}')
+            ex.observers.append(MongoObserver.create(url=mongo_url, db_name=curr_db_name))
+
+        # init the experiment configuration (params)
+        ex.config(f_config)
+
+        # init the experiment logging (capture) method
+        f_ex_capture = ex.capture(f_capture)
+
+        # init the experiment main
+        @ex.main
+        def ex_main(_run):
+            return main_wrapper(f_main, ex, f_ex_capture, self.sacred_db_name(), _run)
+
+        self.ex = ex
+
+
+def main_wrapper(f_main, ex, f_ex_capture, curr_db_name, _run):
+    """
+    f_main updates the main experiment function arguments, calls it and save the
+    experiment results and artifacts.
+    f_main should implement the following API:
+        f_main(ex, _run, f_log_metrics)
+    """
+    client = MongoClient('localhost', 27017)
+    print('db = ', curr_db_name)
+    db = client[curr_db_name]
+    duplicate_ex = check_for_completed_experiment(db, _run.config)
+    if duplicate_ex is not None:
+        _run.info['model_metrics'] = duplicate_ex['info']['model_metrics']
+        _run.info['duplicate_id'] = duplicate_ex['_id']
+        print('Aborting due to a duplicate experiment')
+        raise DuplicateExperiment(duplicate_ex)
+    else:
+        return f_main(ex, _run, f_ex_capture)
