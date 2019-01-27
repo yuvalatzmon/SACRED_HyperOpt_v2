@@ -129,7 +129,13 @@ For every other client machines (a "worker" machine), execute the worker script:
 	export GPU_ID=<gpu_id> # select gpu id
     PYTHONPATH="./" CUDA_VISIBLE_DEVICES=$GPU_ID hyperopt-mongo-worker --mongo=localhost:27017/hyperopt_mnist --poll-interval=1 --workdir=`mktemp -u -p /tmp/hyperopt/`
 
+## NOTE
+This is an extension of my earlier repo https://github
+.com/yuvalatzmon/SACRED_HYPEROPT_Example, which demonstrated a more minimal example for integrating SACRED and hyperopt.
+
+
 # References
+
 1. https://www.hhllcks.de/blog/2018/5/4/version-your-machine-learning-models-with-sacred
 
 2. https://github.com/IDSIA/sacred/issues/82#issuecomment-364067522
