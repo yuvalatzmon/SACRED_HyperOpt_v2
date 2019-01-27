@@ -1,17 +1,17 @@
-A minimal example for integrating a general machine learning training script with 
+An example for integrating a general machine learning training script with 
 [SACRED](https://github.com/IDSIA/sacred) experimental framework,
 and [HyperOpt](https://github.com/hyperopt/hyperopt) (Distributed Asynchronous Hyperparameter Optimization).
 
 Below you can also find full installation and usage instructions.
 
 # Features
-* Random order grid search, which is easy to config and manage, combining HyperOpt and [SACRED](https://github.com/IDSIA/sacred). 
+* Random order grid search, which is easy to config and manage, combining HyperOpt and SACRED. 
 * Grid-search ranges support logarithmic, linear and categorical ranges.  
 * Very easy to scale across machines and clusters. 
 * Avoids running the same experiment twice.
-* Experiments are logged on MongoDB with [SACRED](https://github.com/IDSIA/sacred) experimental framework.
+* Experiments are logged on MongoDB with SACRED experimental framework.
 * Example notebook for accessing results saved on MongoDB using PANDAS DataFrame.
-* A wrapper to adapt argparse based commandline training script, supporting execution from either grid-search script or the commandline
+* An example on how to quickly wrap a commandline based python training script.
 
 # Project files
 `mnist_keras.py` is a script to train mnist from commandline.
