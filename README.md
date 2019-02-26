@@ -34,6 +34,7 @@ deleting) experiment artifacts (model files) using the MongoDB filesystem (GridF
     yes | conda install -c anaconda tensorflow-gpu=1.9.0
     yes | pip install pymongo
     yes | pip install sacred hyperopt h5py
+    yes | conda install pandas matplotlib ipython jupyter nb_conda
     yes | conda install cython 
     yes | pip install setuptools==39.1.0 # downgrade to meet tf 1.9 req
     yes | pip install networkx==1.11 # downgrade to meet hyperopt req
@@ -43,7 +44,6 @@ deleting) experiment artifacts (model files) using the MongoDB filesystem (GridF
 
     # Other common libraries I use, not required by this example
     yes | pip install GitPython markdown-editor 
-    yes | conda install pandas matplotlib ipython jupyter nb_conda
 
 # Installation instructions for MongoDB (v4.0.1) on RHEL/CENTOS, without root privileges
 Both SACRED and HyperOpt require a MongoDB host. Installation instruction are based on [this](https://docs.mongodb.com/manual/tutorial/install-mongodb-on-red-hat/) page.
