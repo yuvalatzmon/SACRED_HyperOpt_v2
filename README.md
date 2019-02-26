@@ -33,16 +33,16 @@ deleting) experiment artifacts (model files) using the MongoDB filesystem (GridF
     conda activate my_env
     yes | conda install -c anaconda tensorflow-gpu=1.9.0
     yes | pip install pymongo
-    yes | pip install sacred hyperopt
-    yes | conda install cython
+    yes | pip install sacred hyperopt h5py
+    yes | conda install cython 
     yes | pip install setuptools==39.1.0 # downgrade to meet tf 1.9 req
-	yes | pip install networkx==1.11 # downgrade to meet hyperopt req
+    yes | pip install networkx==1.11 # downgrade to meet hyperopt req
     
-	# install sacredboard (optional)
-	yes | pip install https://github.com/chovanecm/sacredboard/archive/develop.zip
+    # install sacredboard (optional)
+    yes | pip install https://github.com/chovanecm/sacredboard/archive/develop.zip
 
     # Other common libraries I use, not required by this example
-    yes | pip install GitPython markdown-editor h5py
+    yes | pip install GitPython markdown-editor 
     yes | conda install pandas matplotlib ipython jupyter nb_conda
 
 # Installation instructions for MongoDB (v4.0.1) on RHEL/CENTOS, without root privileges
@@ -130,8 +130,7 @@ For every other client machines (a "worker" machine), execute the worker script:
     PYTHONPATH="./" CUDA_VISIBLE_DEVICES=$GPU_ID hyperopt-mongo-worker --mongo=localhost:27017/hyperopt_mnist --poll-interval=1 --workdir=`mktemp -u -p /tmp/hyperopt/`
 
 ## NOTE
-This is an extension of my earlier repo https://github
-.com/yuvalatzmon/SACRED_HYPEROPT_Example, which demonstrated a more minimal example for integrating SACRED and hyperopt.
+This is an extension of my earlier repo https://github.com/yuvalatzmon/SACRED_HYPEROPT_Example, which demonstrated a more minimal example for integrating SACRED and hyperopt.
 
 
 # References
